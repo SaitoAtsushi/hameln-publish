@@ -121,7 +121,7 @@ impl<'a> From<(&'a str, &'a str)> for Episode<'a> {
 
 fn find_episode<'a>(s: &'a str) -> Option<(Episode, &'a str)> {
     let (title, rest) = s.between("<span style=\"font-size:large\">", "</span>")?;
-    let (body, rest) = rest.between("<div class=\"honbun\">", "</div>")?;
+    let (body, rest) = rest.between("<div class=\"honbun\">", "</div>\n")?;
     Some((Episode::new(title, body), rest))
 }
 
