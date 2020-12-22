@@ -93,7 +93,7 @@ impl<'a> Novel<'a> {
         builder.metadata("title", self.title)?;
         for (num, x) in self.episodes.iter().enumerate() {
             builder.add_content(
-                EpubContent::new(format!("{:<5}", num), x.body.as_bytes())
+                EpubContent::new(format!("{:<}.html", num), x.body.as_bytes())
                     .title(x.title)
                     .reftype(ReferenceType::Text),
             )?;
