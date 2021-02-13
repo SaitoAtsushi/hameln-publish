@@ -143,17 +143,17 @@ impl<'a> Iterator for EpisodeFinder<'a> {
 }
 
 trait Scrape {
-    fn scrape(self: &Self) -> Option<Novel>;
+    fn scrape(self: &Self) -> std::result::Result<Novel, &'static str>;
 }
 
 impl Scrape for str {
-    fn scrape(self: &Self) -> Option<Novel> {
-        let (title, rest) = self.between("<title>", "</title>")?;
-        let rest = rest.skip_until("<a href=./?mode=user&uid=")?;
+    fn scrape(self: &Self) -> std::result::Result<Novel, &'static str> {
+        let (title, rest) = self.between("<title>", "</title>").ok_or("Failed to get title.")?;
+        let rest = rest.skip_until("<a href=//syosetu.org/user/").ok_or("failed to search author.")?;
         let rest = rest.skip_while(|x| x.is_digit(10));
-        let (author, rest) = rest.between("", "</a>")?;
+        let (author, rest) = rest.between(">", "</a>").ok_or("Failed to get author")?;
         let episodes = EpisodeFinder::new(rest).collect::<Vec<_>>();
-        Some(Novel {
+        Ok(Novel {
             title,
             author,
             episodes,
@@ -191,12 +191,12 @@ struct Opt {
     ids: Vec<u32>,
 }
 
-fn main() -> std::result::Result<(), String> {
+fn main() -> std::result::Result<(), &'static str> {
     let opt = Opt::from_args();
 
     for id in opt.ids {
         let novel_text = view_all(id).ok_or("Faild to get novel data.")?;
-        let novel_data = novel_text.scrape().ok_or("Faild to parse novel data.")?;
+        let novel_data = novel_text.scrape()?;
 
         let mut builder = novel_data.to_epub_builder().expect("Fail to build epub.");
         let mut file = File::create(novel_data.make_filename()).expect("Fail to open file.");
